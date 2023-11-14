@@ -4,17 +4,15 @@
 
 %% Directory Management
 
-load('C:\TLS_Velodyne\application\settings.mat')
+load('settings.mat')
 
 %browse to file
-input_file_name = input_file_name;
+input_file_name = '5rpm 1min.pcap';
 disp(input_file_name)
 
 file = input_file_name;
-[filepath,~,~] = fileparts(file);
+[filepath,var1,var2] = fileparts(file);
 input = filepath;
-disp(input)
-
 
 % Export folder
 resultsDir = fullfile(input, 'results');
@@ -30,12 +28,12 @@ end
 output =resultsDir;
 file = input_file_name;
 [~,output_file_name,ext] = fileparts(file);
-disp(output_file_name)
+fprintf("output file name is -- %s\n", output_file_name)
 
 
 %% Initialization of parameters 
 
-times = times; % Scan duration in seconds 
+times = times; % Scan duration in seconds
 angle = angle; % Rotation in degrees around motor axis. Ouster TLS X+ is up, Velodyne is Y+ up
 
 if isempty(angle) || ~isnumeric(angle) || angle < 45 || angle > 360
@@ -210,6 +208,19 @@ s = s + 1; % count update
 
 end
 
+% disp("WRITE THE CLOUD VARIABLE TO FILES-----------")
+% outputDirectory = 'pointClouds/';
+% 
+% if ~exist(outputDirectory, 'dir')
+%     mkdir(outputDirectory);
+% end
+% for ii = 1:numel(Cloud)
+%     pc = Cloud{ii};
+% 
+%     % Define the output PLY file name (e.g., pointCloud1.ply, pointCloud2.ply, ...)
+%     outputFileName = fullfile(outputDirectory, ['pointCloud' num2str(ii) '.ply']);
+%     pcwrite(pc, outputFileName, 'PLYFormat', 'binary');
+% end
 
 %% Initialisation of export parameters
 if pos2 == 1 && puck == 1
@@ -287,6 +298,12 @@ for iii = 1 : 10
 % 16 corresponds to the band, 1800 corresponds to the number of points recorded
 % per band, 3 corresponds to the x, y and z values.
 
+if iii == 1
+    fprintf('ii value -- %d\n', ii);
+    fprintf('iii value -- %d\n', iii);
+    fprintf('range is -- %d : %d\n', round((times/10*iii)-((times/10)-1)), round(iii*times/10));
+end
+
 x1(i,:) = Cloud{1,ii}.Location(i,:,1);
 y1(i,:) = Cloud{1,ii}.Location(i,:,2);
 z1(i,:) = Cloud{1,ii}.Location(i,:,3);
@@ -356,7 +373,7 @@ PC_Final1 = pctransform(PC_Final1, affine3d(RotX));
 filename = sprintf('%s_%d.ply', output_file_name, iiii);
 
 % Change directory to output
-cd(output)
+% cd(output)
 
 % Write file
 pcloud{1,ii} = PC_Final1;
@@ -367,7 +384,9 @@ filesToMerge{bande_sep} = fullfile(output, filename);
 disp(['File stored for merging: ', filesToMerge{bande_sep}]);
 
 % Return to input directory
-cd(input)
+disp("-------------")
+disp(input)
+% cd(input)
 
 ref = []; % suppression of the loaded point cloud
 if puck == 1
@@ -475,4 +494,4 @@ else
     zlabel("Z")
 end
 % Return to input directory
-cd(input)
+% cd(input)

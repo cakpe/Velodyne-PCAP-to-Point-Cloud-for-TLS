@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 open3d = "*"
+numpy = "*"
 
 [dev-packages]
 
