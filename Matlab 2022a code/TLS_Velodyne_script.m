@@ -160,6 +160,9 @@ if pos == 2
     ptCloudIn3(ptCloudIn3>0)=0;
     ptCloudIn3(ptCloudIn3<0)=1;
     
+    %The Intensity property of the point cloud is being set to the values specified by the vector ptCloudIntensity2. 
+    % This means that each point in the point cloud will have an associated intensity value, and these intensity values 
+    % are taken from the vector ptCloudIntensity2.
     ptCloudIntensity2 = single(ptCloudIntensity(:,:)).*ptCloudIn3;
     ptCloudIn = pointCloud(ptCloudIn.Location(:,:,:).*ptCloudIn3,'Intensity',ptCloudIntensity2);
 end
@@ -298,17 +301,14 @@ for iii = 1 : 10
 % 16 corresponds to the band, 1800 corresponds to the number of points recorded
 % per band, 3 corresponds to the x, y and z values.
 
-if iii == 1
-    fprintf('ii value -- %d\n', ii);
-    fprintf('iii value -- %d\n', iii);
-    fprintf('range is -- %d : %d\n', round((times/10*iii)-((times/10)-1)), round(iii*times/10));
-end
-
 x1(i,:) = Cloud{1,ii}.Location(i,:,1);
 y1(i,:) = Cloud{1,ii}.Location(i,:,2);
 z1(i,:) = Cloud{1,ii}.Location(i,:,3);
 int1(i,:) = Cloud{1,ii}.Intensity(i,:);
 
+if iii == 1 && any(Cloud{1,ii}.Intensity(i, :) ~= 0)
+    fprintf('Intensity value -- %d\n', Cloud{1,ii}.Intensity(i,:))
+end
 
 x = [x x1(i,:)];
 y = [y y1(i,:)];

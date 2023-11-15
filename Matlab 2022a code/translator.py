@@ -1,12 +1,16 @@
 import open3d as o3d
 import os
 import numpy as np
+import plyfile
 
 # Specify the directory containing the individual PLY files
 inputDirectory = 'pointClouds/'
 
-# List all PLY files in the input directory
-ply_files = [f for f in os.listdir(inputDirectory) if f.endswith('.ply')]
+# List all PLY files in the input directory. It's not sorted, so sort
+ply_files = sorted(
+    [f for f in os.listdir(inputDirectory) if f.endswith('.ply')],
+    key=lambda f: os.path.getctime(os.path.join(inputDirectory, f))
+)
 
 # Initialize a list to store the loaded point clouds
 Cloud = []
@@ -14,7 +18,14 @@ Cloud = []
 # Loop through each PLY file and load it as a point cloud
 for ply_file in ply_files:
     # Load the PLY file
-    pcd = o3d.io.read_point_cloud(os.path.join(inputDirectory, ply_file))
+    # pcd = o3d.io.read_point_cloud(os.path.join(inputDirectory, ply_file))
+    pcd = {}
+
+    ply_data = plyfile.PlyData.read(os.path.join(inputDirectory, ply_file))
+    pcd['x'] = ply_data['vertex']['x']
+    pcd['y'] = ply_data['vertex']['y']
+    pcd['z'] = ply_data['vertex']['z']
+    pcd['intensity'] = ply_data['vertex']['intensity']
     
     # Append the loaded point cloud to the list
     Cloud.append(pcd)
@@ -22,7 +33,7 @@ for ply_file in ply_files:
 # SETTINGS
 pos2 = 0
 puck = 2
-times = 688 # arbitrary nuimber due to Donny's script
+times = 688 # arbitrary number from Donny's script
 
 # Initialization of export params
 if pos2 == 1 and puck == 1:
@@ -69,7 +80,7 @@ for bande_sep in range(1, bandNumber + 1):
 
     # Acceleration of the process by combining several loops
     for iii in range(1, 11): # from 1 to 10
-        for ii in range( (round((times/10*iii)-((times/10)-1))), ((round(iii*times/10))) ): # This range is procesing batches of size 360
+        for ii in range( (round((times/10*iii)-((times/10)-1))), ((round(iii*times/10))) ): # This range is procesing batches of size 68
             for i in range(iiii, iiii+1): # save the band separately
                 # Deleting old values
                 x1 = []
@@ -81,35 +92,39 @@ for bande_sep in range(1, bandNumber + 1):
                 # 16 corresponds to the band, 1800 corresponds to the number of points recorded
                 # per band, 3 corresponds to the x, y and z values.
 
-                x1.append(Cloud[ii].points[i][0])
-                y1.append(Cloud[ii].points[i][1])
-                z1.append(Cloud[ii].points[i][2])
-                # int1.append(Cloud[ii].colors[i][0])
+                x1.append(Cloud[ii]['x'])
+                y1.append(Cloud[ii]['y'])
+                z1.append(Cloud[ii]['z'])
+                int1.append(Cloud[ii]['intensity'])
 
 
                 x.extend(x1) # extend instead of append for this use case
                 y.extend(y1)
-                z.extend(z1)
-                # intensity.extend(int1[i])
+                z.extend(z1)                
+                intensity.extend(int1)
             X_ref.extend(x)
             Y_ref.extend(y)
             Z_ref.extend(z)
-            # int_ref.extend(intensity)
+            int_ref.extend(intensity)
             
             x = []
             y = []
             z = []
-            # intensity = []
+            intensity = []
         X_ref_final.extend(X_ref)
         Y_ref_final.extend(Y_ref)
         Z_ref_final.extend(Z_ref)
-        # int_ref_final.extend(int_ref)
+        int_ref_final.extend(int_ref)
         
-        # disp(iii) % extraction progress meter 
+        # reset buffers
         X_ref = []
         Y_ref = []
         Z_ref = []
-        # int_ref = []
+        int_ref = []
+
+        if iii == 1:
+            # diagnose here. Instead of a list of memmaps, let's make it a list of floats
+            print(X_ref_final)
 
     ########################### Reconstruction of the point cloud ###########################
     #In MATLAB, the line ref = [X_ref_final; Y_ref_final; Z_ref_final]' is creating a matrix ref by vertically concatenating 
